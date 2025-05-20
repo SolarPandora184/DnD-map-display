@@ -72,14 +72,13 @@
     const currentImage = document.getElementById('currentImage');
     let imageData = [];
 
+    // Load from localStorage
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('imageData');
       if (saved) {
         imageData = JSON.parse(saved);
-        imageData.forEach(({ name, fileData }) => {
-          const blob = new Blob([new Uint8Array(fileData.data)], { type: fileData.type });
-          const file = new File([blob], name, { type: fileData.type });
-          addImageOption(name, file);
+        imageData.forEach(({ name, dataUrl }) => {
+          addImageOption(name, dataUrl);
         });
       }
     });
@@ -89,17 +88,19 @@
       for (const file of files) {
         const name = prompt(`Enter a name for: ${file.name}`);
         if (name) {
-          const arrayBuffer = await file.arrayBuffer();
-          const fileData = { type: file.type, data: Array.from(new Uint8Array(arrayBuffer)) };
-          imageData.push({ name, fileData });
-          localStorage.setItem('imageData', JSON.stringify(imageData));
-          addImageOption(name, file);
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const dataUrl = event.target.result;
+            imageData.push({ name, dataUrl });
+            localStorage.setItem('imageData', JSON.stringify(imageData));
+            addImageOption(name, dataUrl);
+          };
+          reader.readAsDataURL(file);
         }
       }
     });
 
-    function addImageOption(name, file) {
-      const url = URL.createObjectURL(file);
+    function addImageOption(name, url) {
       const option = document.createElement('option');
       option.textContent = name;
       option.value = url;
