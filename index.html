@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D&D Image Viewer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #000;
+      color: white;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #222;
+    }
+    h1 {
+      font-size: 20px;
+    }
+    #uploadSection {
+      padding: 10px 20px;
+    }
+    input[type="file"] {
+      margin: 5px 0;
+    }
+    #imageSelect {
+      font-size: 16px;
+      padding: 5px;
+      background-color: #444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    #display {
+      width: 100vw;
+      height: calc(100vh - 120px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    #display img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>D&D Map Viewer</h1>
+    <select id="imageSelect" onchange="changeImage()">
+      <option disabled selected>Select an image</option>
+    </select>
+  </header>
+
+  <div id="uploadSection">
+    <input type="file" id="imageUpload" accept="image/*" multiple>
+    <p>After uploading, you will be prompted to name each image.</p>
+  </div>
+
+  <div id="display">
+    <img id="currentImage" src="" alt="Selected map will appear here">
+  </div>
+
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const imageSelect = document.getElementById('imageSelect');
+    const currentImage = document.getElementById('currentImage');
+    let imageData = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('imageData');
+      if (saved) {
+        imageData = JSON.parse(saved);
+        imageData.forEach(({ name, fileData }) => {
+          const blob = new Blob([new Uint8Array(fileData.data)], { type: fileData.type });
+          const file = new File([blob], name, { type: fileData.type });
+          addImageOption(name, file);
+        });
+      }
+    });
+
+    imageUpload.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      for (const file of files) {
+        const name = prompt(`Enter a name for: ${file.name}`);
+        if (name) {
+          const arrayBuffer = await file.arrayBuffer();
+          const fileData = { type: file.type, data: Array.from(new Uint8Array(arrayBuffer)) };
+          imageData.push({ name, fileData });
+          localStorage.setItem('imageData', JSON.stringify(imageData));
+          addImageOption(name, file);
+        }
+      }
+    });
+
+    function addImageOption(name, file) {
+      const url = URL.createObjectURL(file);
+      const option = document.createElement('option');
+      option.textContent = name;
+      option.value = url;
+      imageSelect.appendChild(option);
+    }
+
+    function changeImage() {
+      const selectedUrl = imageSelect.value;
+      currentImage.src = selectedUrl;
+    }
+  </script>
+</body>
+</html>
