@@ -41,11 +41,44 @@
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      position: relative;
     }
     #display img {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      transition: transform 0.3s;
+    }
+    #fullscreenControls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background-color: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 8px;
+    }
+    #fullscreenControls button {
+      padding: 5px 10px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #fullscreenBtn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      padding: 10px;
+      font-size: 14px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -64,15 +97,23 @@
 
   <div id="display">
     <img id="currentImage" src="" alt="Selected map will appear here">
+    <div id="fullscreenControls">
+      <button onclick="rotateMap(90)">Rotate 90°</button>
+      <button onclick="rotateMap(-90)">Rotate -90°</button>
+      <button onclick="exitFullscreen()">Exit Fullscreen</button>
+    </div>
   </div>
+  <button id="fullscreenBtn" onclick="enterFullscreen()">Enter Fullscreen</button>
 
   <script>
     const imageUpload = document.getElementById('imageUpload');
     const imageSelect = document.getElementById('imageSelect');
     const currentImage = document.getElementById('currentImage');
+    const fullscreenControls = document.getElementById('fullscreenControls');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
     let imageData = [];
+    let rotation = 0;
 
-    // Load from localStorage
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('imageData');
       if (saved) {
@@ -110,7 +151,43 @@
     function changeImage() {
       const selectedUrl = imageSelect.value;
       currentImage.src = selectedUrl;
+      rotation = 0;
+      currentImage.style.transform = `rotate(0deg)`;
     }
+
+    function enterFullscreen() {
+      const display = document.getElementById('display');
+      if (display.requestFullscreen) {
+        display.requestFullscreen();
+      } else if (display.webkitRequestFullscreen) {
+        display.webkitRequestFullscreen();
+      } else if (display.msRequestFullscreen) {
+        display.msRequestFullscreen();
+      }
+      fullscreenControls.style.display = 'flex';
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      fullscreenControls.style.display = 'none';
+    }
+
+    function rotateMap(degrees) {
+      rotation = (rotation + degrees) % 360;
+      currentImage.style.transform = `rotate(${rotation}deg)`;
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        fullscreenControls.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
